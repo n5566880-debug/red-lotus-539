@@ -1,33 +1,23 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
+import plotly.express as px
 import numpy as np
-from datetime import datetime
 
-# --- 1. 介面極致美化 ---
-st.set_page_config(page_title="赤鍊九五・至尊戰情室", layout="wide")
+# --- 1. 介面與金庫風格 ---
+st.set_page_config(page_title="赤鍊九五・金庫終極版", layout="wide")
 st.markdown("""
 <style>
     [data-testid="stSidebar"] { background-color: #0a0a0a; border-right: 2px solid #D4AF37; }
     .main-card { background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%); padding: 25px; border-radius: 15px; border: 1px solid #D4AF37; margin-bottom: 20px; }
     .fortune-card { background: #2d1b00; padding: 15px; border-radius: 10px; border-left: 5px solid #D4AF37; }
-    .stMetric { background: #111; border-radius: 10px; padding: 10px; border: 0.5px solid #333; }
+    .heatmap-box { background: #111; padding: 10px; border-radius: 10px; border: 1px solid #444; }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🔱 赤鍊紅蓮・539 九五至尊戰情室 (v5.0)")
+st.title("🔱 赤鍊紅蓮・539 金庫終極戰情室 (v5.1)")
 
-# --- 2. 側邊欄：數據注入 ---
-with st.sidebar:
-    st.header("🛠️ 數據注入系統")
-    new_date = st.date_input("開獎日期")
-    n_cols = st.columns(5)
-    nums = [n_cols[i].number_input(f"N{i+1}", 1, 39, 1) for i in range(5)]
-    if st.button("🚀 注入數據並分析"):
-        st.balloons()
-        st.success("數據已同步至雲端緩存")
-
-# --- 3. 核心數據 (30期真實數據) ---
+# --- 2. 數據核心 (30期真實數據) ---
 data = {
     '日期': ['2025-12-03', '2025-12-04', '2025-12-05', '2025-12-06', '2025-12-08','2025-12-09', '2025-12-10', '2025-12-11', '2025-12-12', '2025-12-13','2025-12-15', '2025-12-16', '2025-12-17', '2025-12-18', '2025-12-19','2025-12-20', '2025-12-22', '2025-12-23', '2025-12-24', '2025-12-25','2025-12-26', '2025-12-27', '2025-12-29', '2025-12-30', '2025-12-31','2026-01-01', '2026-01-02', '2026-01-03', '2026-01-05', '2026-01-06'],
     'N1': [5, 1, 2, 6, 5, 7, 4, 2, 10, 2, 3, 2, 5, 4, 12, 1, 2, 9, 2, 14, 1, 1, 5, 11, 8, 15, 17, 22, 10, 1],
@@ -37,65 +27,56 @@ data = {
     'N5': [35, 37, 29, 32, 31, 39, 26, 26, 35, 38, 38, 35, 32, 36, 30, 38, 38, 35, 30, 39, 36, 38, 37, 33, 35, 36, 39, 38, 39, 33]
 }
 df = pd.DataFrame(data)
-df['總和'] = df[['N1', 'N2', 'N3', 'N4', 'N5']].sum(axis=1)
-df['MA5'] = df['總和'].rolling(window=5).mean()
+all_nums = pd.concat([df['N1'], df['N2'], df['N3'], df['N4'], df['N5']])
+counts = all_nums.value_counts().reindex(range(1, 40), fill_value=0)
 
-# --- 4. 奇門與運勢分析面板 ---
+# --- 3. 奇門運勢與戰術頂部看板 ---
 st.markdown(f"""
 <div class="main-card">
-    <h2 style='color: #D4AF37; margin-top: 0;'>🏮 今日奇門遁甲局：丙戌日</h2>
     <div style='display: flex; justify-content: space-between;'>
-        <div style='width: 48%;'>
-            <p style='color: #FF4B4B; font-size: 18px;'><b>【 奇門局勢 】</b></p>
-            <ul>
-                <li><b>天盤：</b>丙火入戌庫，火光內斂，大數區隱現。</li>
-                <li><b>地盤：</b>庚申專祿祿位偏移，20區間磁場最強。</li>
-                <li><b>吉神：</b>生門落中宮，25 為定格核心。</li>
-            </ul>
+        <div style='width: 30%;'>
+            <h3 style='color: #D4AF37; margin-top: 0;'>🏮 丙戌日奇門局</h3>
+            <p style='font-size: 14px;'>生門中宮：鎖定 <b>25</b><br>天盤丙火：利 <b>大數奇數</b><br>地盤專祿：20區間反彈</p>
         </div>
-        <div style='width: 48%; border-left: 1px solid #333; padding-left: 20px;'>
-            <p style='color: #00FF00; font-size: 18px;'><b>【 掌門今日運勢 】</b></p>
-            <p>1996庚申(金) + 2001辛巳(金) 雙金交輝，運勢呈「<b>騰蛇化龍</b>」之象。金氣太旺，需以火煉，今晚利「大數」與「奇數」。</p>
+        <div style='width: 35%; border-left: 1px solid #333; padding-left: 15px;'>
+            <h3 style='color: #00FF00; margin-top: 0;'>🐉 掌門運勢</h3>
+            <p style='font-size: 14px;'>庚申金氣：<b>極旺</b><br>戰鬥建議：<b>宜守中帶攻</b><br>今日狀態：騰蛇化龍(利偏財)</p>
+        </div>
+        <div style='width: 30%; border-left: 1px solid #333; padding-left: 15px;'>
+            <h3 style='color: #FF4B4B; margin-top: 0;'>⏱️ 吉時倒數</h3>
+            <p style='font-size: 20px;'><b>封盤前最後衝刺</b></p>
+            <p style='font-size: 12px;'>吉時：13:15-14:45 已過，進入暗合局。</p>
         </div>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# --- 5. 具體建議面板 ---
-col_s1, col_s2 = st.columns(2)
-with col_s1:
-    st.markdown("""
-    <div class="fortune-card">
-        <h3 style='color: #D4AF37; margin:0;'>🎯 戰術建議</h3>
-        <p style='margin: 10px 0;'>1. <b>重兵佈署</b>：24, 25, 26（連碰）。<br>
-        2. <b>奇兵突擊</b>：31（防禦最大數跳空）。<br>
-        3. <b>守備位</b>：07（平衡金火氣場）。</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-with col_s2:
-    st.markdown("""
-    <div class="fortune-card" style='border-left-color: #FF4B4B;'>
-        <h3 style='color: #FF4B4B; margin:0;'>⚠️ 注意事項</h3>
-        <p style='margin: 10px 0;'>1. <b>避開連號</b>：昨日01, 02已開，今日應避開極端連號。<br>
-        2. <b>封盤提醒</b>：19:50 前完成所有佈署。<br>
-        3. <b>心態穩住</b>：今日為「反彈局」，切勿因昨日跌深而縮手。</p>
-    </div>
-    """, unsafe_allow_html=True)
+# --- 4. 具體建議與注意事項 ---
+c1, c2 = st.columns(2)
+with c1:
+    st.markdown("""<div class="fortune-card"><h4>🎯 戰術建議</h4>1. 進攻連碰：<b>24, 25, 26</b><br>2. 奇兵定位：<b>31</b><br>3. 防守防線：<b>07</b></div>""", unsafe_allow_html=True)
+with c2:
+    st.markdown("""<div class="fortune-card" style='border-left-color: #FF4B4B;'><h4>⚠️ 注意事項</h4>1. 避開連號：01, 02 剛開，暫避連號。<br>2. 回填規律：20區間連斷2期必回填。</div>""", unsafe_allow_html=True)
 
 st.markdown("---")
 
-# --- 6. 數據看板 ---
-st.subheader("📊 量化監控指標")
-m1, m2, m3, m4 = st.columns(4)
-m1.metric("昨日總和", int(df['總和'].iloc[-1]), "-64")
-m2.metric("MA5 攻擊水位", f"{df['MA5'].iloc[-1]:.0f}")
-m3.metric("推薦號碼", "25", "奇門定格")
-m4.metric("吉時窗口", "13:15-14:45", "庚申金旺")
+# --- 5. 號碼熱力分佈圖 (新增！) ---
+st.subheader("🔥 30期冷熱號碼雷達")
+fig_heat = px.bar(x=counts.index, y=counts.values, labels={'x':'號碼', 'y':'出現次數'}, color=counts.values, color_continuous_scale='YlOrRd')
+fig_heat.update_layout(template="plotly_dark", height=300, margin=dict(l=10, r=10, t=10, b=10))
+st.plotly_chart(fig_heat, use_container_width=True)
 
-# --- 7. 能量趨勢圖 ---
-fig = go.Figure()
-fig.add_trace(go.Scatter(x=df['日期'], y=df['總和'], mode='lines+markers', line=dict(color='#D4AF37', width=4), name='能量重心'))
-fig.add_trace(go.Scatter(x=df['日期'], y=df['MA5'], line=dict(color='gray', width=2, dash='dash'), name='5日均線'))
-fig.update_layout(template="plotly_dark", height=400, margin=dict(l=20, r=20, t=20, b=20))
-st.plotly_chart(fig, use_container_width=True)
+# --- 6. 數據看板與趨勢 ---
+m1, m2, m3, m4 = st.columns(4)
+m1.metric("昨日總和", 53, "-64")
+m2.metric("推薦號碼", "25", "奇門定格")
+m3.metric("真空預警", "20-29區間", "高機率")
+m4.metric("金庫狀態", "準備噴發", "極限壓縮")
+
+# --- 7. 側邊欄：數據注入 ---
+with st.sidebar:
+    st.header("🛠️ 數據注入")
+    new_date = st.date_input("日期")
+    n = [st.number_input(f"N{i+1}", 1, 39, 1) for i in range(5)]
+    if st.button("🚀 注入數據"):
+        st.success("成功！")
