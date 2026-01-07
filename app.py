@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 import numpy as np
 
 # --- 1. 介面風格設定 ---
-st.set_page_config(page_title="赤鍊九五・數據全顯版", layout="wide")
+st.set_page_config(page_title="赤鍊九五・純淨數據版", layout="wide")
 st.markdown("""
 <style>
     [data-testid="stSidebar"] { background-color: #0a0a0a; border-right: 2px solid #D4AF37; }
@@ -13,7 +13,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🔱 赤鍊紅蓮・539 數據全顯戰情室 (v5.3)")
+st.title("🔱 赤鍊紅蓮・539 數據全顯戰情室 (v5.4)")
 
 # --- 2. 數據核心 (30期真實數據) ---
 data = {
@@ -41,9 +41,8 @@ st.markdown(f"""<div class="main-card"><div style='display: flex; justify-conten
 col_left, col_right = st.columns([1, 1])
 
 with col_left:
-    st.subheader("📈 能量趨勢 (附數值標籤)")
+    st.subheader("📈 能量趨勢")
     fig_k = go.Figure()
-    # 增加 text 參數來顯示數字
     fig_k.add_trace(go.Scatter(
         x=df['日期'], y=df['總和'], 
         mode='lines+markers+text', 
@@ -53,12 +52,17 @@ with col_left:
         name='總和'
     ))
     fig_k.add_trace(go.Scatter(x=df['日期'], y=df['MA5'], line=dict(color='gray', width=1, dash='dash'), name='均線'))
-    fig_k.update_layout(template="plotly_dark", height=400, margin=dict(l=10, r=10, t=30, b=10), showlegend=False)
+    # 重點修正：強制關閉 rangeslider
+    fig_k.update_layout(
+        template="plotly_dark", height=400, 
+        margin=dict(l=10, r=10, t=30, b=10), 
+        showlegend=False,
+        xaxis=dict(rangeslider=dict(visible=False), type='category')
+    )
     st.plotly_chart(fig_k, use_container_width=True)
 
 with col_right:
-    st.subheader("🔥 號碼熱力 (附出現次數)")
-    # 增加 text 參數顯示次數
+    st.subheader("🔥 號碼熱力")
     fig_h = go.Figure(go.Bar(
         x=counts.index, y=counts.values, 
         text=counts.values, 
@@ -66,7 +70,12 @@ with col_right:
         marker_color=counts.values, 
         marker_colorscale='YlOrRd'
     ))
-    fig_h.update_layout(template="plotly_dark", height=400, margin=dict(l=10, r=10, t=30, b=10), showlegend=False)
+    fig_h.update_layout(
+        template="plotly_dark", height=400, 
+        margin=dict(l=10, r=10, t=30, b=10), 
+        showlegend=False,
+        xaxis=dict(type='category')
+    )
     st.plotly_chart(fig_h, use_container_width=True)
 
 # --- 5. 戰術詳細建議 ---
@@ -74,7 +83,7 @@ c1, c2 = st.columns(2)
 with c1:
     st.markdown("""<div class="fortune-card"><h4>🎯 攻勢陣容</h4><b>主攻</b>：24, 25, 26<br><b>奇兵</b>：31 | <b>守備</b>：07</div>""", unsafe_allow_html=True)
 with c2:
-    st.markdown("""<div class="fortune-card" style='border-left-color: #FF4B4B;'><h4>⚠️ 操盤注意</h4>昨日總和 53 為極端低點，今晚反彈力道看好 60-80 點。</div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="fortune-card" style='border-left-color: #FF4B4B;'><h4>⚠️ 操盤注意</h4>昨日總和 53 處於歷史極低點，今晚 20 區間彈升動能最強。</div>""", unsafe_allow_html=True)
 
 # --- 6. 側邊欄 ---
 with st.sidebar:
