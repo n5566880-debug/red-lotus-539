@@ -1,28 +1,32 @@
+
 import streamlit as st
 import pandas as pd
 import datetime
 import random
 
 # --- 1. 介面設定 ---
-st.set_page_config(page_title="赤鍊天機・深度戰略室", layout="wide", page_icon="☯️")
+st.set_page_config(page_title="赤鍊天機・全功能戰略室", layout="wide", page_icon="☯️")
 st.markdown("""
 <style>
     .stApp { background-color: #050505; color: #E0E0E0; }
     .main-card { background: #111; padding: 25px; border-radius: 10px; border: 1px solid #D4AF37; margin-bottom: 20px; }
     .score-card { background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%); padding: 20px; border-radius: 10px; border-left: 5px solid #00FF00; text-align: center; }
-    .bad-score { border-left: 5px solid #FF4B4B; }
+    .direction-card { background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%); padding: 15px; border-radius: 8px; border-left: 5px solid #FFD700; text-align: center; }
+    .divination-box { background: #220022; padding: 20px; border-radius: 10px; border: 1px solid #9932CC; text-align: center; }
     .timeline-box { background: #222; padding: 15px; border-radius: 5px; margin-bottom: 10px; border-left: 3px solid #D4AF37; }
     .gold-text { color: #D4AF37; font-weight: bold; font-size: 22px; }
+    .big-luck { font-size: 36px; font-weight: bold; color: #FFD700; }
     h3 { border-bottom: 1px solid #333; padding-bottom: 10px; margin-top: 20px; }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("☯️ 赤鍊紅蓮・深度命理戰略室 (v3.0)")
+st.title("☯️ 赤鍊紅蓮・全功能命理戰略室 (v3.1)")
 
-# --- 2. 深度資料庫 (天干戰略屬性) ---
+# --- 2. 核心資料庫 (深度解析 + 時空算法) ---
 TIAN_GAN = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"]
+DIRECTIONS = ["正北", "東北", "正東", "東南", "正南", "西南", "正西", "西北"]
 
-# 模擬資料：真實排盤需萬年曆，此處以天干特性進行深度模擬
+# [深度解析資料庫]
 DATA_DICT = {
     "甲": {
         "title": "參天巨木・大將軍",
@@ -96,20 +100,104 @@ DATA_DICT = {
     }
 }
 
+# [時空決策算法]
+def get_lucky_direction(hour):
+    random.seed(hour + datetime.date.today().day) 
+    lucky_dir = random.choice(DIRECTIONS)
+    wealth_dir = random.choice(DIRECTIONS)
+    return lucky_dir, wealth_dir
+
+def divine_outcome(question):
+    if not question:
+        return None, None, None
+    seed_val = len(question) + datetime.datetime.now().minute
+    random.seed(seed_val)
+    outcomes = ["大吉 (進攻)", "小吉 (穩健)", "平 (觀望)", "小凶 (防守)", "大凶 (撤退)"]
+    details = [
+        "青龍返首，大舉進攻。鎖定的目標極高機率出現。",
+        "玉女守門，利於陰柔。適合小額投資或防守型號碼。",
+        "伏吟之局，動不如靜。建議維持原定策略，不宜臨時變卦。",
+        "白虎猖狂，恐有損失。今日宜避開熱門，專攻冷門。",
+        "天網四張，不可妄動。今日氣場混亂，建議休息或極小額。"
+    ]
+    idx = random.randint(0, 4)
+    return outcomes[idx], details[idx], idx
+
 # --- 3. 側邊欄導航 ---
 st.sidebar.title("🛡️ 戰略功能模組")
-mode = st.sidebar.radio("請選擇戰略層級", ["👤 深度本命解析 (戰略藍圖)", "💞 高階合盤分析 (戰友識別)", "🕰️ 時空決策 (v2.0保留)"])
+mode = st.sidebar.radio("請選擇戰略層級", ["🕰️ 今日時空戰略 (出征)", "👤 深度本命解析 (戰略藍圖)", "💞 高階合盤分析 (戰友識別)"])
 
-# --- 4. 模組一：深度本命解析 ---
-if mode == "👤 深度本命解析 (戰略藍圖)":
-    st.markdown("### 👤 掌門人・人生戰略藍圖")
+# --- 4. 模組一：今日時空戰略 (已修復完整代碼) ---
+if mode == "🕰️ 今日時空戰略 (出征)":
+    st.markdown("### 🕰️ 今日出征指南 (Daily Strategy)")
     
+    # 獲取當前時間
+    now = datetime.datetime.now()
+    current_hour = now.hour
+    
+    # 計算吉方
+    luck, wealth = get_lucky_direction(current_hour)
+    
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        st.info(f"📅 日期：{now.strftime('%Y-%m-%d')}")
+    with c2:
+        st.info(f"⏰ 時間：{now.strftime('%H:%M')} (時局變動中)")
+    with c3:
+        st.warning("🔥 狀態：丙戌火庫日")
+
+    st.markdown("---")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown(f"""
+        <div class="direction-card">
+            <h3>💰 今日財神方位</h3>
+            <div class="big-luck">{wealth}方</div>
+            <p>建議：請前往住家或公司 <b>{wealth}方</b> 的彩券行下注。</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+    with col2:
+        st.markdown(f"""
+        <div class="direction-card" style="border-left-color: #D4AF37;">
+            <h3>✨ 貴人/吉氣方位</h3>
+            <div class="big-luck">{luck}方</div>
+            <p>戰術：若與人合資或討論號碼，面朝 <b>{luck}方</b> 座位最佳。</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("---")
+    st.markdown("### 🔮 靈龜決策占卜系統")
+    st.caption("當您猶豫不決（例如：該不該追 25？要不要獨資？）請誠心輸入問題。")
+    
+    question = st.text_input("請輸入您的戰略疑問：", placeholder="例如：今晚 25 號是否會開出？")
+    
+    if st.button("🐢 啟動靈龜占卜"):
+        if question:
+            outcome, detail, idx = divine_outcome(question)
+            color = "#00FF00" if idx <= 1 else ("#FF4B4B" if idx >= 3 else "#FFFF00")
+            
+            st.markdown(f"""
+            <div class="divination-box" style="border-color: {color};">
+                <h3 style="color: #E0E0E0;">問：{question}</h3>
+                <h1 style="color: {color};">{outcome}</h1>
+                <p style="font-size: 18px; margin-top: 15px;">{detail}</p>
+            </div>
+            """, unsafe_allow_html=True)
+            if idx <= 1:
+                st.balloons()
+        else:
+            st.warning("請先輸入問題，心誠則靈。")
+
+# --- 5. 模組二：深度本命解析 ---
+elif mode == "👤 深度本命解析 (戰略藍圖)":
+    st.markdown("### 👤 掌門人・人生戰略藍圖")
     col1, col2 = st.columns(2)
     with col1:
         birth_date = st.date_input("請輸入您的生辰", datetime.date(1996, 1, 1))
     
     if st.button("🚀 啟動深度掃描"):
-        # 簡易模擬：以日期尾數模擬日干 (真實需萬年曆)
         day_gan_sim = TIAN_GAN[birth_date.day % 10]
         data = DATA_DICT[day_gan_sim]
         
@@ -130,10 +218,9 @@ if mode == "👤 深度本命解析 (戰略藍圖)":
         for cycle in data['cycle']:
             st.markdown(f"""<div class="timeline-box">{cycle}</div>""", unsafe_allow_html=True)
 
-# --- 5. 模組二：高階合盤分析 ---
+# --- 6. 模組三：高階合盤分析 ---
 elif mode == "💞 高階合盤分析 (戰友識別)":
     st.markdown("### 💞 戰略夥伴/伴侶 速配指數儀表板")
-    
     c1, c2 = st.columns(2)
     with c1:
         st.info("👤 您的資料")
@@ -146,73 +233,34 @@ elif mode == "💞 高階合盤分析 (戰友識別)":
         gan1 = TIAN_GAN[d1.day % 10]
         gan2 = TIAN_GAN[d2.day % 10]
         
-        # 模擬合盤邏輯
-        # 這裡使用簡易的五行生剋賦分
         elements = {"甲": "木", "乙": "木", "丙": "火", "丁": "火", "戊": "土", "己": "土", "庚": "金", "辛": "金", "壬": "水", "癸": "水"}
         e1, e2 = elements[gan1], elements[gan2]
         
-        # 基礎分
         love_score = 60
         biz_score = 60
         relation_type = "普通"
+        desc = "關係一般"
         
-        # 判斷邏輯
-        if e1 == e2: # 比旺
-            love_score = 75
-            biz_score = 90
-            relation_type = "戰友 (比肩)"
-            desc = "你們像是照鏡子，性格相似。事業上是最佳拍檔，但感情上容易互不相讓，缺乏互補的激情。"
-        elif (e1=="木" and e2=="火") or (e1=="火" and e2=="土") or (e1=="土" and e2=="金") or (e1=="金" and e2=="水") or (e1=="水" and e2=="木"): # 我生
-            love_score = 85
-            biz_score = 70
-            relation_type = "付出 (食傷)"
-            desc = "您非常寵愛對方，願意為對方付出。對方能激發您的靈感。感情甜蜜，但事業上您會比較累。"
-        elif (e2=="木" and e1=="火") or (e2=="火" and e1=="土") or (e2=="土" and e1=="金") or (e2=="金" and e1=="水") or (e2=="水" and e1=="木"): # 生我
-            love_score = 95
-            biz_score = 85
-            relation_type = "貴人 (印星)"
-            desc = "對方是您的超級大貴人！無論事業還是感情，對方都能無條件支持您、滋潤您。請好好珍惜。"
-        elif (e1=="木" and e2=="土") or (e1=="火" and e2=="金") or (e1=="土" and e2=="水") or (e1=="金" and e2=="木") or (e1=="水" and e2=="火"): # 我剋
-            love_score = 70
-            biz_score = 80
-            relation_type = "征服 (財星)"
-            desc = "您能掌控對方。對方在您面前比較聽話。事業上對方是您的下屬或資產，感情上您佔主導權。"
-        else: # 剋我
-            love_score = 50
-            biz_score = 60
-            relation_type = "磨練 (官殺)"
-            desc = "對方氣場壓制您。這是一段有壓力的關係。事業上對方能督促您進步，但感情上您會感到壓抑。"
+        if e1 == e2: 
+            love_score, biz_score, relation_type, desc = 75, 90, "戰友 (比肩)", "你們性格相似，事業上是最佳拍檔，但感情容易互不相讓。"
+        elif (e1=="木" and e2=="火") or (e1=="火" and e2=="土") or (e1=="土" and e2=="金") or (e1=="金" and e2=="水") or (e1=="水" and e2=="木"):
+            love_score, biz_score, relation_type, desc = 85, 70, "付出 (食傷)", "您寵愛對方，對方激發您的靈感。感情甜蜜，事業您較累。"
+        elif (e2=="木" and e1=="火") or (e2=="火" and e1=="土") or (e2=="土" and e1=="金") or (e2=="金" and e1=="水") or (e2=="水" and e1=="木"):
+            love_score, biz_score, relation_type, desc = 95, 85, "貴人 (印星)", "對方是超級貴人！無論事業感情都滋潤您。請珍惜。"
+        elif (e1=="木" and e2=="土") or (e1=="火" and e2=="金") or (e1=="土" and e2=="水") or (e1=="金" and e2=="木") or (e1=="水" and e2=="火"):
+            love_score, biz_score, relation_type, desc = 70, 80, "征服 (財星)", "您掌控對方。事業上對方是您的資產，感情上您主導。"
+        else:
+            love_score, biz_score, relation_type, desc = 50, 60, "磨練 (官殺)", "對方氣場壓制您。事業上督促您，感情上您會感到壓力。"
 
         st.markdown("---")
-        
-        # 顯示儀表板
         col_res1, col_res2 = st.columns(2)
         with col_res1:
-            st.markdown(f"""
-            <div class="score-card" style="border-color: {'#00FF00' if love_score >= 80 else '#FF4B4B'};">
-                <h3>❤️ 感情速配指數</h3>
-                <h1 style="font-size: 48px; margin:0;">{love_score}%</h1>
-                <p>類型：{relation_type}</p>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f"""<div class="score-card" style="border-color: {'#00FF00' if love_score >= 80 else '#FF4B4B'};"><h3>❤️ 感情速配指數</h3><h1 style="font-size: 48px; margin:0;">{love_score}%</h1><p>類型：{relation_type}</p></div>""", unsafe_allow_html=True)
         with col_res2:
-            st.markdown(f"""
-            <div class="score-card" style="border-color: {'#00FF00' if biz_score >= 80 else '#FF4B4B'};">
-                <h3>💼 事業互補指數</h3>
-                <h1 style="font-size: 48px; margin:0;">{biz_score}%</h1>
-                <p>戰力評估：{desc}</p>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f"""<div class="score-card" style="border-color: {'#00FF00' if biz_score >= 80 else '#FF4B4B'};"><h3>💼 事業互補指數</h3><h1 style="font-size: 48px; margin:0;">{biz_score}%</h1><p>評估：{desc}</p></div>""", unsafe_allow_html=True)
             
         st.info(f"📋 戰略總評：{gan1} (您) ⚔️ {gan2} (對方)")
 
-# --- 6. 模組三：保留 v2.0 的時空決策 ---
-elif mode == "🕰️ 時空決策 (v2.0保留)":
-    # 為了節省篇幅，這裡保留 v2.0 的代碼邏輯，或者您需要我再貼一次完整的包含 v2.0 功能的代碼？
-    st.markdown("### 🕰️ 今日時空戰略 (Daily Strategy)")
-    st.info("💡 此模組功能與 v2.0 相同，提供每日財神方位與靈龜占卜。")
-    # ... (若需要完整代碼可再次請求)
-
 # --- 頁尾 ---
 st.markdown("---")
-st.caption("🛡️ 赤鍊天機閣 v3.0 | 深度命理戰略系統")
+st.caption("🛡️ 赤鍊天機閣 v3.1 | 全功能修復版")
