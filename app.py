@@ -3,19 +3,18 @@ import pandas as pd
 import plotly.graph_objects as go
 import numpy as np
 
-# --- 1. 軍事與帝王風格整合 ---
-st.set_page_config(page_title="赤鍊九五・火力完全體", layout="wide")
+# --- 1. 頂規戰情室風格 ---
+st.set_page_config(page_title="赤鍊帝國・領先者戰情室", layout="wide")
 st.markdown("""
 <style>
     [data-testid="stSidebar"] { background-color: #050505; border-right: 2px solid #D4AF37; }
-    .main-card { background: #111; padding: 20px; border-radius: 10px; border: 1px solid #D4AF37; margin-bottom: 15px; }
-    .fortune-card { background: #2d1b00; padding: 15px; border-radius: 10px; border-left: 5px solid #D4AF37; color: #E0E0E0; }
-    .fire-power { background: #220000; padding: 15px; border-radius: 8px; border-left: 5px solid #FF4B4B; }
-    .precision { background: #001a00; padding: 15px; border-radius: 8px; border-left: 5px solid #00FF00; }
+    .main-card { background: #0a0a0a; padding: 20px; border-radius: 10px; border: 1px solid #D4AF37; margin-bottom: 15px; }
+    .warning-card { background: #330000; padding: 15px; border-radius: 10px; border-left: 5px solid #FF0000; color: #FFCCCC; }
+    .victory-card { background: #002200; padding: 15px; border-radius: 10px; border-left: 5px solid #00FF00; color: #CCFFCC; }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🔱 赤鍊紅蓮・九五火力完全戰情室 (v5.7)")
+st.title("🔱 赤鍊紅蓮・539 戰略領先戰情室 (v5.8)")
 
 # --- 2. 數據核心 (30期真實數據) ---
 data = {
@@ -28,59 +27,57 @@ data = {
 }
 df = pd.DataFrame(data)
 df['總和'] = df[['N1', 'N2', 'N3', 'N4', 'N5']].sum(axis=1)
-df['MA5'] = df['總和'].rolling(window=5).mean()
 all_nums = pd.concat([df['N1'], df['N2'], df['N3'], df['N4'], df['N5']])
 counts = all_nums.value_counts().reindex(range(1, 40), fill_value=0)
 
-# --- 3. 頂部看板：奇門與統帥運勢 ---
+# --- 3. 領先者看板 (全維度整合) ---
 st.markdown(f"""
 <div class="main-card">
     <div style='display: flex; justify-content: space-between;'>
-        <div style='width: 48%;'>
-            <h3 style='color: #D4AF37; margin-top: 0;'>🏮 丙戌日奇門局</h3>
-            <p style='font-size: 14px;'>生門中宮：鎖定 <b>25</b> | 天盤丙火：利大數 | 警告：20區間真空臨界</p>
+        <div style='width: 30%;'>
+            <h4 style='color: #D4AF37; margin:0;'>🏮 戰略奇門預警</h4>
+            <p style='font-size:13px;'>今日局：丙戌(火)入墓<br><b>領先訊號：25 定格</b><br>真空區間：24-28 (極限壓力)</p>
         </div>
-        <div style='width: 48%; border-left: 1px solid #333; padding-left: 20px;'>
-            <h3 style='color: #00FF00; margin-top: 0;'>🐉 掌門運勢 (1996庚申/2001辛巳)</h3>
-            <p style='font-size: 14px;'>雙金交輝，運勢「<b>騰蛇化龍</b>」。今日金氣極旺，宜以中路突破大數區間。</p>
+        <div style='width: 40%; border-left: 1px solid #333; padding-left: 15px;'>
+            <h4 style='color: #00FF00; margin:0;'>🐉 統帥氣場與吉時</h4>
+            <p style='font-size:13px;'>庚申/辛巳：騰蛇化龍<br><b>吉時鎖定：20:15 - 20:30 (氣場巔峰)</b><br>建議：中路強攻，大數壓制</p>
+        </div>
+        <div style='width: 25%; border-left: 1px solid #333; padding-left: 15px;'>
+            <h4 style='color: #FF4B4B; margin:0;'>📡 莊家陷阱偵測</h4>
+            <p style='font-size:13px;'>熱門連號：01, 02 (避開)<br><b>領先號碼：26, 31</b></p>
         </div>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# --- 4. 火力配置建議 ---
+# --- 4. 火力配置 (彈幕與精準) ---
+st.subheader("⚔️ 火力配置建議")
 f1, f2 = st.columns(2)
 with f1:
-    st.markdown("""<div class="fire-power">
-        <h4 style='color: #FF4B4B; margin:0;'>🚀 彈幕覆蓋 (二星連碰)</h4>
-        <b>目標陣地</b>：[ 24, 25, 26 ] | <b>說明</b>：針對能量缺口進行飽和攻擊。
-    </div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="warning-card"><h4>🚀 彈幕覆蓋 (Saturation)</h4><b>鎖定陣地</b>：24, 25, 26<br><b>戰術目的</b>：對抗區間斷層，進行地毯式收割。</div>""", unsafe_allow_html=True)
 with f2:
-    st.markdown("""<div class="precision">
-        <h4 style='color: #00FF00; margin:0;'>🎯 精準打擊 (坐車/獨資)</h4>
-        <b>鎖定座標</b>：[ 25 ] | <b>說明</b>：今日氣場最強點，執行斬首。
-    </div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="victory-card"><h4>🎯 精準打擊 (Precision)</h4><b>核心目標</b>：[ 25 ]<br><b>戰術目的</b>：特種斬首行動，命盤氣場交匯點。</div>""", unsafe_allow_html=True)
 
 st.markdown("---")
 
-# --- 5. 戰略軍團與雙圖 ---
+# --- 5. 數據全顯雙圖 ---
 col_l, col_r = st.columns([1, 1])
 with col_l:
-    st.subheader("📈 能量重心趨勢 (K線)")
+    st.subheader("📈 能量重心趨勢")
     fig_k = go.Figure()
     fig_k.add_trace(go.Scatter(x=df['日期'], y=df['總和'], mode='lines+markers+text', text=df['總和'], textposition="top center", line=dict(color='#D4AF37', width=3)))
-    fig_k.update_layout(template="plotly_dark", height=350, margin=dict(l=10, r=10, t=30, b=10), showlegend=False, xaxis=dict(rangeslider=dict(visible=False), type='category'))
+    fig_k.update_layout(template="plotly_dark", height=380, margin=dict(l=10, r=10, t=30, b=10), showlegend=False, xaxis=dict(rangeslider=dict(visible=False), type='category'))
     st.plotly_chart(fig_k, use_container_width=True)
 
 with col_r:
-    st.subheader("🔥 兵力分佈雷達 (熱力圖)")
+    st.subheader("🔥 兵力分佈雷達")
     fig_h = go.Figure(go.Bar(x=counts.index, y=counts.values, text=counts.values, textposition='outside', marker_color=counts.values, marker_colorscale='YlOrRd'))
-    fig_h.update_layout(template="plotly_dark", height=350, margin=dict(l=10, r=10, t=30, b=10), showlegend=False, xaxis=dict(type='category'))
+    fig_h.update_layout(template="plotly_dark", height=380, margin=dict(l=10, r=10, t=30, b=10), showlegend=False, xaxis=dict(type='category'))
     st.plotly_chart(fig_h, use_container_width=True)
 
 # --- 6. 側邊欄 ---
 with st.sidebar:
     st.header("🛠️ 數據注入")
     n = [st.number_input(f"N{i+1}", 1, 39, 1) for i in range(5)]
-    if st.button("🚀 更新戰場數據"):
-        st.success("數據載入成功！")
+    if st.button("🚀 更新數據"):
+        st.success("戰報載入成功！")
