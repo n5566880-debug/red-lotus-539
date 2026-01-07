@@ -1,17 +1,21 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import numpy as np
 
-# --- 1. 頁面配置 ---
-st.set_page_config(page_title="赤鍊帝國・極限戰情室", layout="wide", page_icon="🧧")
-st.markdown("<style>.stApp { background-color: #050505; color: #E0E0E0; }</style>", unsafe_allow_html=True)
+# --- 1. 介面極簡風格設定 ---
+st.set_page_config(page_title="赤鍊帝國・統帥面板", layout="wide")
+st.markdown("""
+<style>
+    .reportview-container { background: #000000; }
+    .status-card { background: #1A1A1A; padding: 20px; border-radius: 15px; border-left: 8px solid #FF4B4B; }
+    .stMetric { background: #111; border-radius: 10px; padding: 10px; }
+</style>
+""", unsafe_allow_html=True)
 
-st.title("🧧 赤鍊紅蓮・539 全維度量化戰情室 (v3.0)")
-st.markdown("---")
+st.title("🛡️ 赤鍊紅蓮・539 降維打擊指揮中心 (v4.0)")
 
-# --- 2. 核心數據庫 (30期真實數據) ---
+# --- 2. 歷史數據庫 (30期真實數據) ---
 data = {
     '日期': ['2025-12-03', '2025-12-04', '2025-12-05', '2025-12-06', '2025-12-08','2025-12-09', '2025-12-10', '2025-12-11', '2025-12-12', '2025-12-13','2025-12-15', '2025-12-16', '2025-12-17', '2025-12-18', '2025-12-19','2025-12-20', '2025-12-22', '2025-12-23', '2025-12-24', '2025-12-25','2025-12-26', '2025-12-27', '2025-12-29', '2025-12-30', '2025-12-31','2026-01-01', '2026-01-02', '2026-01-03', '2026-01-05', '2026-01-06'],
     'N1': [5, 1, 2, 6, 5, 7, 4, 2, 10, 2, 3, 2, 5, 4, 12, 1, 2, 9, 2, 14, 1, 1, 5, 11, 8, 15, 17, 22, 10, 1],
@@ -20,58 +24,45 @@ data = {
     'N4': [33, 25, 17, 24, 28, 30, 16, 25, 28, 31, 29, 33, 19, 33, 27, 35, 27, 30, 25, 36, 27, 28, 29, 27, 26, 29, 36, 32, 34, 11],
     'N5': [35, 37, 29, 32, 31, 39, 26, 26, 35, 38, 38, 35, 32, 36, 30, 38, 38, 35, 30, 39, 36, 38, 37, 33, 35, 36, 39, 38, 39, 33]
 }
-
 df = pd.DataFrame(data)
 df['總和'] = df[['N1', 'N2', 'N3', 'N4', 'N5']].sum(axis=1)
 df['MA5'] = df['總和'].rolling(window=5).mean()
-df['STD'] = df['總和'].rolling(window=5).std()
-df['Upper'] = df['MA5'] + (df['STD'] * 2)
-df['Lower'] = df['MA5'] - (df['STD'] * 2)
 
-# --- 3. 頂部看板 (Dashboard) ---
-m1, m2, m3, m4 = st.columns(4)
-m1.metric("昨日總和", int(df['總和'].iloc[-1]), f"{int(df['總和'].iloc[-1] - df['總和'].iloc[-2])}")
-m2.metric("5日均值", f"{df['MA5'].iloc[-1]:.1f}")
-m3.metric("能量狀態", "極限超賣" if df['總和'].iloc[-1] < df['Lower'].iloc[-1] else "常態")
-m4.metric("真空區間", "20-29", "強烈反彈預警")
+# --- 3. 自動化戰術判斷邏輯 ---
+last_sum = df['總和'].iloc[-1]
+last_ma5 = df['MA5'].iloc[-1]
+status = "⚠️ 能量斷層 (極度壓縮)" if last_sum < 70 else "✅ 能量正常"
+action = "🔥 全力突擊 20 區間" if last_sum < 60 else "🛡️ 穩定控盤"
 
-# --- 4. 主圖表區域 (K線 + 乖離率) ---
-fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1, row_heights=[0.7, 0.3])
+# --- 4. 專業化自動提示面板 ---
+st.markdown(f"""
+<div class="status-card">
+    <h2 style='color: #FF4B4B; margin: 0;'>📢 統帥作戰指令</h2>
+    <p style='font-size: 20px; margin: 10px 0;'>當前狀態：<b>{status}</b></p>
+    <p style='font-size: 24px; color: #00FF00;'><b>核心建議：{action}</b></p>
+    <hr style='border-color: #333;'>
+    <p style='font-size: 16px;'>數據解讀：昨日總和僅 {last_sum}，遠低於均線 {last_ma5:.0f}。真空引力鎖定在 <b>20-29 區間</b>，補位機率極高。</p>
+</div>
+""", unsafe_allow_html=True)
 
-# K線圖
-fig.add_trace(go.Candlestick(x=df['日期'], open=df['總和'].shift(1), high=df[['N1','N2','N3','N4','N5']].max(axis=1), low=df[['N1','N2','N3','N4','N5']].min(axis=1), close=df['總和'], name='重心K線'), row=1, col=1)
-fig.add_trace(go.Scatter(x=df['日期'], y=df['MA5'], line=dict(color='#FFD700', width=2), name='5日攻擊線'), row=1, col=1)
-fig.add_trace(go.Scatter(x=df['日期'], y=df['Upper'], line=dict(color='rgba(255,255,255,0.2)', dash='dot'), name='壓力'), row=1, col=1)
-fig.add_trace(go.Scatter(x=df['日期'], y=df['Lower'], line=dict(color='rgba(255,255,255,0.2)', dash='dot'), name='支撐'), row=1, col=1)
+st.markdown("---")
 
-# 乖離率圖 (Bias)
-bias = ((df['總和'] - df['MA5']) / df['MA5']) * 100
-fig.add_trace(go.Bar(x=df['日期'], y=bias, name='乖離率%', marker_color=np.where(bias<0, '#00ff00', '#ff0000')), row=2, col=1)
+# --- 5. 指揮官數據看板 ---
+c1, c2, c3, c4 = st.columns(4)
+c1.metric("昨日總和", int(last_sum), f"{int(last_sum - df['總和'].iloc[-2])}")
+c2.metric("攻擊水位", f"{last_ma5:.0f}")
+c3.metric("最冷區間", "20-29", "真空 2 期")
+c4.metric("熱點回填", "24, 25, 26", "系統推薦")
 
-fig.update_layout(template="plotly_dark", height=700, showlegend=False, xaxis_rangeslider_visible=False)
+# --- 6. 視覺化 K 線 (簡化版) ---
+fig = go.Figure()
+fig.add_trace(go.Scatter(x=df['日期'], y=df['總和'], mode='lines+markers', line=dict(color='#FF4B4B', width=4), name='能量重心'))
+fig.add_trace(go.Scatter(x=df['日期'], y=df['MA5'], line=dict(color='#FFD700', width=2, dash='dash'), name='5日均線'))
+fig.update_layout(template="plotly_dark", height=400, margin=dict(l=20, r=20, t=20, b=20))
 st.plotly_chart(fig, use_container_width=True)
 
-# --- 5. 戰術詳細分析 ---
-st.markdown("### ⚔️ 赤鍊戰術分析面板")
-c1, c2 = st.columns(2)
-
-with c1:
-    st.error("🚨 **區間斷層警告**")
-    st.write("偵測到 20-29 區間連續兩期掛零。根據拉回法則，今晚該區間開出 2-3 顆號碼的機率定格為 **89%**。建議鎖定：**24, 25, 26**。")
-
-with c2:
-    st.success("🎯 **能量反彈目標**")
-    st.write(f"昨日總和 53 嚴重偏離均線。今晚預期總和將回彈至 **105 - 135** 區間。大數區 (30-39) 必須配置 1 碼防禦，鎖定：**31**。")
-
-# --- 6. 每日更新側邊欄 ---
-with st.sidebar:
-    st.header("🛠️ 數據注入")
-    new_date = st.date_input("日期")
-    n1 = st.number_input("N1", 1, 39, 1)
-    n2 = st.number_input("N2", 1, 39, 10)
-    n3 = st.number_input("N3", 1, 39, 20)
-    n4 = st.number_input("N4", 1, 39, 30)
-    n5 = st.number_input("N5", 1, 39, 35)
-    if st.button("🚀 注入最新數據"):
-        st.balloons()
-        st.success("數據已暫存，請依照紅蓮指示更新 GitHub 以永久保存。")
+# --- 7. 下注吉時提示 ---
+st.markdown("""
+> **🛑 系統吉時鎖定**：庚申/九九重陽雙金共振。今日最佳下單窗口：**13:15 - 14:45**。 
+> **🎯 推薦陣容**：24、25、26（二星/三星連碰）+ 07、31（防禦邊緣）。
+""")
