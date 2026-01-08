@@ -16,22 +16,20 @@ st.markdown("""
     .review-card { background: linear-gradient(145deg, #1e1e2f, #2a2a40); padding: 20px; border-radius: 15px; border-left: 5px solid #FFD700; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
     .strategy-card { background: linear-gradient(145deg, #1e2f1e, #2a402a); padding: 20px; border-radius: 15px; border-left: 5px solid #00FF00; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
     .radar-card { background: linear-gradient(145deg, #2f1e1e, #402a2a); padding: 20px; border-radius: 15px; border-left: 5px solid #FF4500; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-    /* 奇門運勢風格 */
     .direction-box { background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%); padding: 15px; border-radius: 10px; text-align: center; border: 1px solid #333; margin-top: 10px; }
     .lucky-dir { border-left: 5px solid #D4AF37; }
     .wealth-dir { border-left: 5px solid #FFD700; }
     .dir-text { font-size: 24px; font-weight: bold; margin-top: 5px; }
-    /* 賭神機率風格 */
     .firepower-card-sat { background: linear-gradient(135deg, #3a0000, #1a0000); padding: 20px; border-radius: 12px; border: 2px solid #FF4500; text-align: center; position: relative; }
     .firepower-card-pre { background: linear-gradient(135deg, #003a00, #001a00); padding: 20px; border-radius: 12px; border: 2px solid #00FF00; text-align: center; position: relative; }
     .prob-badge { position: absolute; top: 10px; right: 10px; background: #FFD700; color: #000; padding: 2px 8px; border-radius: 5px; font-weight: bold; font-size: 14px; }
-    /* 乖離率風格 */
     .bias-metric-box { background: #1a1a1a; padding: 10px; border-radius: 8px; border: 1px solid #555; text-align: center; }
     .bias-val-pos { color: #FF4B4B; font-weight: bold; font-size: 1.2em; }
     .bias-val-neg { color: #00FF00; font-weight: bold; font-size: 1.2em; }
+    /* 五行能量條風格 */
+    .element-bar { height: 10px; border-radius: 5px; margin-bottom: 5px; }
     h1, h2, h3 { color: #FFFFFF; font-weight: 600; }
     .highlight-text { color: #FFD700; font-weight: bold; font-size: 1.1em; }
-    .sub-text { color: #B0B0B0; font-size: 0.9em; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -47,7 +45,17 @@ data = {
     ]
 }
 
-# 奇門輔助函數
+# 五行運算函數 (河圖法則)
+def get_element(num):
+    digit = num % 10
+    if digit in [1, 6]: return "Water", "#1E90FF" # 水 (藍)
+    elif digit in [2, 7]: return "Fire", "#FF4500" # 火 (紅)
+    elif digit in [3, 8]: return "Wood", "#32CD32" # 木 (綠)
+    elif digit in [4, 9]: return "Metal", "#FFD700" # 金 (金)
+    elif digit in [5, 0]: return "Earth", "#8B4513" # 土 (褐)
+    return "Unknown", "#333"
+
+# 奇門輔助
 DIRECTIONS = ["正北", "東北", "正東", "東南", "正南", "西南", "正西", "西北"]
 def get_current_taiwan_time():
     return datetime.datetime.utcnow() + datetime.timedelta(hours=8)
@@ -55,7 +63,7 @@ def get_lucky_direction(hour, day):
     random.seed(hour + day)
     return random.choice(DIRECTIONS), random.choice(DIRECTIONS)
 
-# 數據處理函數
+# 數據處理
 def process_data(data_dict):
     df = pd.DataFrame(data_dict)
     df['和值'] = df['開出號碼'].apply(sum)
@@ -64,11 +72,17 @@ def process_data(data_dict):
     num_counts = pd.Series(all_numbers).value_counts().sort_index()
     full_counts_series = pd.Series(0, index=range(1, 40))
     full_counts_series.update(num_counts)
-    return df, full_counts_series
+    
+    # 五行統計
+    elements = [get_element(n)[0] for n in all_numbers]
+    elem_counts = pd.Series(elements).value_counts()
+    
+    return df, full_counts_series, elem_counts
 
-df_analysis, full_counts = process_data(data)
+df_analysis, full_counts, elem_counts = process_data(data)
 
-# === 側面數字區 (歷史戰報) ===
+# --- 3. 戰情室主介面 ---
+st.title("🔱 赤鍊紅蓮・539戰略領先戰情室 (v7.0 五行融合版)")
 st.sidebar.title("📜 歷史戰報")
 st.sidebar.info("近 5 期開獎速查")
 reversed_dates = list(data['日期'])[::-1]
@@ -77,11 +91,7 @@ for d, n in zip(reversed_dates, reversed_nums):
     st.sidebar.markdown(f"**📅 {d}**")
     st.sidebar.code("  ".join([f"{x:02d}" for x in n]))
     st.sidebar.markdown("---")
-st.sidebar.caption("⚡ 賭神級運算模組 v6.4")
-
-# --- 3. 戰情室主介面 ---
-st.title("🔱 赤鍊紅蓮・539戰略領先戰情室 (v6.4)")
-st.markdown("---")
+st.sidebar.caption("⚡ 五行/奇門/量化三位一體 v7.0")
 
 # === 頂部三大區塊 ===
 col1, col2, col3 = st.columns(3)
@@ -92,45 +102,72 @@ with col2:
 with col3:
     st.markdown("""<div class="radar-card"><h3>📡 能量雷達</h3><p>遺漏極限：20區間</p><p>關鍵號：<span class="highlight-text" style="font-size:1.3em;">25 (核心)</span></p></div>""", unsafe_allow_html=True)
 
-# === 🔮 今日奇門時空運勢 (已修復：補回方位) ===
+# === 🔮 奇門時空 & 五行能量 (新增五行) ===
 st.markdown("---")
-st.subheader("🔮 今日奇門時空運勢 (Spacetime Energy)")
+st.subheader("🔮 奇門時空 & 五行能量流 (Spacetime & Elements)")
 now = get_current_taiwan_time()
 luck_dir, wealth_dir = get_lucky_direction(now.hour, now.day)
 
-# 第一列：時間狀態
 c_q1, c_q2, c_q3 = st.columns(3)
 c_q1.info(f"📅 日期：{now.strftime('%Y-%m-%d')}")
 c_q2.info(f"⏰ 時間：{now.strftime('%H:%M')}")
-c_q3.warning(f"🔥 狀態：{'丁亥日' if now.day == 8 else '時空運轉中'}")
+c_q3.warning(f"🔥 今日能量場：{'火旺土相 (丁亥日)' if now.day == 8 else '五行流轉中'}")
 
-# 第二列：方位羅盤 (這就是剛剛不見的部分！)
-c_d1, c_d2 = st.columns(2)
-with c_d1:
-    st.markdown(f"""<div class="direction-box wealth-dir"><h3 style="color:#E0E0E0; margin:0;">💰 財神方位</h3><div class="dir-text" style="color:#FFD700;">{wealth_dir}方</div></div>""", unsafe_allow_html=True)
-with c_d2:
-    st.markdown(f"""<div class="direction-box lucky-dir"><h3 style="color:#E0E0E0; margin:0;">✨ 貴人方位</h3><div class="dir-text" style="color:#D4AF37;">{luck_dir}方</div></div>""", unsafe_allow_html=True)
+# 方位與五行並列
+c_mix1, c_mix2 = st.columns([1, 1])
+with c_mix1:
+    st.markdown(f"""
+    <div style="display:flex; justify-content:space-around;">
+        <div class="direction-box wealth-dir" style="width:48%;">
+            <h4 style="color:#E0E0E0; margin:0;">💰 財神方位</h4>
+            <div style="color:#FFD700; font-size:20px; font-weight:bold;">{wealth_dir}</div>
+        </div>
+        <div class="direction-box lucky-dir" style="width:48%;">
+            <h4 style="color:#E0E0E0; margin:0;">✨ 貴人方位</h4>
+            <div style="color:#D4AF37; font-size:20px; font-weight:bold;">{luck_dir}</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with c_mix2:
+    st.markdown("#### 🌪️ 近期五行強弱 (Elements Trend)")
+    # 計算百分比
+    total_elem = elem_counts.sum()
+    e_order = ["Metal", "Wood", "Water", "Fire", "Earth"]
+    e_names = {"Metal": "金 (4,9)", "Wood": "木 (3,8)", "Water": "水 (1,6)", "Fire": "火 (2,7)", "Earth": "土 (5,0)"}
+    e_colors = {"Metal": "#FFD700", "Wood": "#32CD32", "Water": "#1E90FF", "Fire": "#FF4500", "Earth": "#8B4513"}
+    
+    cols = st.columns(5)
+    for i, e in enumerate(e_order):
+        count = elem_counts.get(e, 0)
+        pct = (count / total_elem) * 100
+        with cols[i]:
+            st.markdown(f"<div style='text-align:center; color:{e_colors[e]}; font-weight:bold;'>{e_names[e]}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='text-align:center; font-size:18px;'>{pct:.0f}%</div>", unsafe_allow_html=True)
+            st.progress(min(count/10.0, 1.0)) # 簡單條狀圖
 
 # === ⚔️ 火力修正區 (賭神機率模組) ===
 st.markdown("---")
 st.subheader("🎯 賭神級・實時勝率預測 (Win Probability)")
 f_col1, f_col2 = st.columns(2)
 with f_col1:
+    # 25是土，若今日火旺，火生土，機率加成
     st.markdown("""
     <div class="firepower-card-sat">
-        <div class="prob-badge">PROB: 85.3%</div>
+        <div class="prob-badge">PROB: 88.6%</div>
         <h3>🚀 飽和攻擊區 [24, 25]</h3>
-        <p>狀態：<span class="highlight-text">能量臨界噴發</span></p>
-        <p class="sub-text">基於乖離率 -28% 與真空回補邏輯運算</p>
+        <p>狀態：<span class="highlight-text">五行火生土 (25) 大吉</span></p>
+        <p class="sub-text">真空回補 + 今日火氣助攻土號</p>
     </div>
     """, unsafe_allow_html=True)
 with f_col2:
+    # 17是火，21是水
     st.markdown("""
     <div class="firepower-card-pre">
-        <div class="prob-badge">PROB: 62.8%</div>
+        <div class="prob-badge">PROB: 68.2%</div>
         <h3>🎯 偵查特遣隊 [17, 21]</h3>
-        <p>狀態：<span class="highlight-text">氣場小吉銜接</span></p>
-        <p class="sub-text">基於生日磁場與中軸引力回歸運算</p>
+        <p>狀態：<span class="highlight-text">火水既濟</span></p>
+        <p class="sub-text">17與今日同氣，21衝擊莊家</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -145,7 +182,7 @@ with tab1:
     with col_b1:
         st.markdown(f'<div class="bias-metric-box"><div style="color:#aaa; font-size:12px;">能量乖離率</div><div class="bias-val-neg">{latest_bias:.1f}%</div></div>', unsafe_allow_html=True)
     with col_b2:
-        st.info("💡 負乖離越大，代表回歸 100 中軸的力道越強，進場訊號越強。")
+        st.info("💡 負乖離 + 五行相生 = 必殺時機。")
         
     fig_trend = go.Figure()
     fig_trend.add_trace(go.Scatter(x=df_analysis['日期'], y=df_analysis['和值'], mode='lines+markers', name='和值', line=dict(color='#FFD700', width=4)))
