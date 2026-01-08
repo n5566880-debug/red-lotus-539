@@ -9,7 +9,7 @@ import numpy as np
 # --- 1. 頁面基礎設定 ---
 st.set_page_config(page_title="赤鍊紅蓮・539戰情室", layout="wide", page_icon="🔱")
 
-# --- CSS 美化 ---
+# --- CSS 美化 (完全保留) ---
 st.markdown("""
 <style>
     .stApp { background-color: #121212; color: #E0E0E0; }
@@ -25,6 +25,10 @@ st.markdown("""
     /* 火力修正 */
     .firepower-card-sat { background: linear-gradient(135deg, #3a0000, #1a0000); padding: 20px; border-radius: 12px; border: 2px solid #FF4500; text-align: center; }
     .firepower-card-pre { background: linear-gradient(135deg, #003a00, #001a00); padding: 20px; border-radius: 12px; border: 2px solid #00FF00; text-align: center; }
+    /* 乖離率指標風格 (新增) */
+    .bias-metric-box { background: #1a1a1a; padding: 10px; border-radius: 8px; border: 1px solid #555; text-align: center; }
+    .bias-val-pos { color: #FF4B4B; font-weight: bold; font-size: 1.2em; } /* 正乖離(過熱) */
+    .bias-val-neg { color: #00FF00; font-weight: bold; font-size: 1.2em; } /* 負乖離(超賣) */
     /* 文字設定 */
     h1, h2, h3 { color: #FFFFFF; font-weight: 600; }
     .highlight-text { color: #FFD700; font-weight: bold; font-size: 1.1em; }
@@ -57,7 +61,11 @@ def get_lucky_direction(hour, day):
 def process_data(data_dict):
     df = pd.DataFrame(data_dict)
     df['和值'] = df['開出號碼'].apply(sum)
-    df['平均值'] = df['和值'] / 5
+    
+    # 乖離率計算核心：基準值設為 539 理論平均總和 100
+    theoretical_mean = 100
+    df['乖離率'] = ((df['和值'] - theoretical_mean) / theoretical_mean) * 100
+    
     all_numbers = [num for sublist in df['開出號碼'] for num in sublist]
     num_counts = pd.Series(all_numbers).value_counts().sort_index()
     full_counts_series = pd.Series(0, index=range(1, 40))
@@ -66,26 +74,20 @@ def process_data(data_dict):
 
 df_analysis, full_counts = process_data(data)
 
-# === [修復] 側面數字區 (歷史戰報) ===
+# === 側面數字區 (歷史戰報) ===
 st.sidebar.title("📜 歷史戰報")
 st.sidebar.info("近 5 期開獎速查")
-
-# 倒序顯示 (最新的在最上面)
 reversed_dates = list(data['日期'])[::-1]
 reversed_nums = list(data['開出號碼'])[::-1]
-
 for d, n in zip(reversed_dates, reversed_nums):
     st.sidebar.markdown(f"**📅 {d}**")
-    # 將號碼格式化為漂亮的代碼塊
     nums_str = "  ".join([f"{x:02d}" for x in n])
     st.sidebar.code(nums_str)
     st.sidebar.markdown("---")
-
-st.sidebar.caption("⚡ 赤鍊紅蓮系統 v6.1")
-
+st.sidebar.caption("⚡ 赤鍊紅蓮系統 v6.2")
 
 # --- 3. 戰情室主介面 ---
-st.title("🔱 赤鍊紅蓮・539戰略領先戰情室 (v6.1)")
+st.title("🔱 赤鍊紅蓮・539戰略領先戰情室 (v6.2)")
 st.markdown("---")
 
 # === 頂部三大戰略區塊 ===
@@ -122,12 +124,10 @@ st.markdown("---")
 st.subheader("🔮 今日奇門時空運勢 (Daily Qimen Fortune)")
 now = get_current_taiwan_time()
 luck_dir, wealth_dir = get_lucky_direction(now.hour, now.day)
-
 c_q1, c_q2, c_q3 = st.columns(3)
 c_q1.info(f"📅 日期：{now.strftime('%Y-%m-%d')}")
 c_q2.info(f"⏰ 時間：{now.strftime('%H:%M')}")
 c_q3.warning(f"🔥 狀態：{'丁亥日' if now.day == 8 else '時空運轉中'}")
-
 c_d1, c_d2 = st.columns(2)
 with c_d1:
     st.markdown(f"""<div class="direction-box wealth-dir"><h3 style="color:#E0E0E0; margin:0;">💰 財神方位</h3><div class="dir-text" style="color:#FFD700;">{wealth_dir}方</div></div>""", unsafe_allow_html=True)
@@ -143,27 +143,48 @@ with f_col1:
 with f_col2:
     st.markdown("""<div class="firepower-card-pre"><h3>🎯 狙擊手目標</h3><p>核心目標：<span class="highlight-text" style="font-size:1.5em;">[ 25 ]</span> 拖帶 [ 26 ]</p><p class="sub-text">戰術目的：中軸線依然是最強引力點。</p></div>""", unsafe_allow_html=True)
 
-# === 📊 圖表區 ===
+# === 📊 圖表區 (新增乖離率) ===
 st.markdown("---")
-tab1, tab2 = st.tabs(["📈 能量重心趨勢 (K線)", "🔥 兵力分佈雷達 (熱力)"])
+tab1, tab2 = st.tabs(["📈 能量趨勢與乖離 (Bias)", "🔥 兵力分佈雷達 (Heatmap)"])
 
 with tab1:
-    st.subheader("📈 能量重心趨勢圖 (Trend)")
+    st.subheader("📈 能量重心 K 線 & 乖離率")
+    
+    # 顯示最新的乖離率指標
+    latest_bias = df_analysis['乖離率'].iloc[-1]
+    bias_color_class = "bias-val-pos" if latest_bias > 0 else "bias-val-neg"
+    bias_status = "🔥 過熱 (可能回跌)" if latest_bias > 20 else ("❄️ 超賣 (準備反彈)" if latest_bias < -20 else "⚖️ 震盪平衡")
+    
+    col_bias1, col_bias2 = st.columns([1, 3])
+    with col_bias1:
+        st.markdown(f"""
+        <div class="bias-metric-box">
+            <div style="color:#aaa; font-size:14px;">目前能量乖離率 (Bias)</div>
+            <div class="{bias_color_class}">{latest_bias:.1f}%</div>
+            <div style="font-size:12px; margin-top:5px;">{bias_status}</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_bias2:
+        st.info("💡 **統帥解讀**：負乖離擴大 (綠字) 代表能量被過度壓縮，是 **進場佈局** 的最佳信號。")
+
+    # K線圖
     fig_trend = go.Figure()
     fig_trend.add_trace(go.Scatter(
         x=df_analysis['日期'], y=df_analysis['和值'], 
-        mode='lines+markers', name='和值 (總能量)', 
+        mode='lines+markers', name='和值 (實際能量)', 
         line=dict(color='#FFD700', width=4)
     ))
+    # 基準線設為 100
     fig_trend.add_trace(go.Scatter(
-        x=df_analysis['日期'], y=df_analysis['平均值']*5, 
-        mode='lines', name='理論基準線', 
+        x=df_analysis['日期'], y=[100]*len(df_analysis), 
+        mode='lines', name='理論中軸 (100)', 
         line=dict(color='#00FF00', width=2, dash='dash')
     ))
     fig_trend.update_layout(
         paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
         font=dict(color='#E0E0E0'), hovermode="x unified",
-        xaxis=dict(showgrid=False), yaxis=dict(showgrid=True, gridcolor='#333')
+        xaxis=dict(showgrid=False), yaxis=dict(showgrid=True, gridcolor='#333'),
+        margin=dict(t=10, b=10)
     )
     st.plotly_chart(fig_trend, use_container_width=True)
 
